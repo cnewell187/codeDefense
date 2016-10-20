@@ -48,6 +48,9 @@ dragonBulletTower = function(index, game, enemies, bullets, sprite) {
     this.fireRate = 100;
     this.damagePower = 1;
     this.bulletSpeed = 1000;
+    this.soundAvailable = false;
+    this.soundOnFire = game.add.audio("fireBallSound")
+    this.soundOnFire.onStop.add(soundStopped, this);
 
 };
 dragonBulletTower.prototype = Object.create(newTower.prototype);
@@ -61,7 +64,10 @@ skullTower = function(index, game, enemies, bullets, sprite) {
     this.range = 5000;
     this.fireRate = 1000;
     this.damagePower = 10;
-    this.bulletSpeed = 300;
+    this.bulletSpeed = 500;
+    this.soundAvailable = true;
+    this.soundOnFire = game.add.audio("beeSound")
+    this.soundOnFire.onStop.add(soundStopped, this);
 
 };
 
@@ -76,6 +82,10 @@ laserTower = function(index, game, enemies, bullets, sprite) {
     this.fireRate = 10;
     this.damagePower = 1;
     this.bulletSpeed = 3000;
+    this.soundAvailable = true;
+    this.soundOnFire = game.add.audio("blaster")
+    this.soundOnFire.onStop.add(soundStopped, this);
+
 
 };
 
@@ -90,6 +100,9 @@ arrowTower = function(index, game, enemies, bullets, sprite) {
     this.fireRate = 1000;
     this.damagePower = 1;
     this.bulletSpeed = 400;
+    this.soundAvailable = false;
+    // this.soundOnFire = game.add.audio("beeSound")
+    // this.soundOnFire.onStop.add(soundStopped, this);
 
 };
 
@@ -124,14 +137,18 @@ newTower.prototype.update = function() {
             if (this.enemy.alive === true) {
                 bullet.reset(this.tower.x + 8, this.tower.y + 8);
                 bullet.rotation =  this.game.physics.arcade.moveToObject(bullet, this.enemyBody, this.bulletSpeed);
+                if(this.soundAvailable === true){
+                  this.soundOnFire.play();
+                  this.soundAvailable = false;
+                } //HELPZ
             }
             for (var i = 0; i < this.bullets.length; i++) {
                 if (this.bullets.children[i].alive === true && this.enemy.alive === true) {
 
                       this.bullets.children[i].rotation = this.game.physics.arcade.moveToObject(this.bullets.children[i], this.enemyBody, this.bulletSpeed);
-                      if(this.type === "laser" ){
-                        bullet.reset(this.tower.x + 10, this.tower.y + 20);
-                      }
+                      // if(this.type === "laser" ){
+                      //   bullet.reset(this.tower.x + 10, this.tower.y + 20);
+                      // }
 
                 }
                 if (this.enemy.alive === false) {
@@ -176,6 +193,11 @@ newTower.prototype.bulletHitEnemy = function(enemy, bullet) {
 
     bullet.kill();
     enemies[enemy.name].health -= this.damagePower;
+
+}
+
+function soundStopped(sound){
+  this.soundAvailable = true;
 
 }
 
@@ -324,6 +346,7 @@ function finalBoss(index, game) {
     this.game = game;
     this.health = 20000;
     this.alive = true;
+    this.boss = true;
 
     //spawns enemy at spawn point
     this.enemy = game.add.sprite(0, 544, 'finalBoss');
@@ -404,7 +427,7 @@ HackerDefense.Game.prototype = {
     this.skullGuy.constructorType = skullTower; //sprite.constructorType
     this.skullGuy.alpha = 0.5
     this.skullGuyInfoText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 256,
-      "Name: Skullzor \n Cost: 50 \nDamge:10 \nRange: 5000 \nSpeed:1 \nUpgrades: None", {
+      "Name: The Hive \n Cost: 50 \nDamge:10 \nRange: 5000 \nSpeed:1 \nUpgrades: None", {
         font: "20px Arial",
         fill: "#ffffff",
         align: "left"
@@ -459,12 +482,13 @@ HackerDefense.Game.prototype = {
 
     create: function() {
         this.map = this.game.add.tilemap('level2');
-        this.level = 1;
+        this.level = 1; //trump
         this.levelCount = 0;
         this.levelPass = false;
         this.enemiesAlive = 0;
         this.resourceA = 100;
         this.lives = 5;
+        this.gameEnd = false;
         this.resourcesText = this.game.add.text(this.game.world.centerX + 40, this.game.world.centerY + 250, "Resources:", {
             font: "40px Arial",
             fill: "#ffffff",
@@ -633,6 +657,11 @@ HackerDefense.Game.prototype = {
                 HackerDefense.game.state.states.Game.levelCount = HackerDefense.game.state.states.Game.levelCount + 1
                 HackerDefense.game.state.states.Game.lives = HackerDefense.game.state.states.Game.lives - 1
                 HackerDefense.game.state.states.Game.livesText.setText("Lives: " + HackerDefense.game.state.states.Game.lives);
+                if(enemy.boss){
+                  console.log("the boss crossed the line")
+                  HackerDefense.game.state.states.Game.lives = HackerDefense.game.state.states.Game.lives - 10;
+                  HackerDefense.game.state.states.Game.livesText.setText("Lives: " + HackerDefense.game.state.states.Game.lives);
+                }
 
             }
 
@@ -866,13 +895,16 @@ HackerDefense.Game.prototype = {
             enemies = [];
         }
 
-        if (this.lives <= 0) {
-            this.gameText = this.game.add.text(this.game.world.centerX - 375, this.game.world.centerY - 75,
-                "GAME OVER \n Click to Restart", {
+        if (this.lives <= 0 && this.gameEnd === false) {
+            this.gameText = this.game.add.text(this.game.world.centerX - 200, this.game.world.centerY - 75,
+                "GAME OVER \nClick to Restart", {
                     font: "60px Arial",
                     fill: "#a70808",
                     align: "center"
                 });
+
+                this.game.sound.play('gameOver');
+                this.gameEnd = true;
 
         }
 
