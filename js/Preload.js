@@ -41,13 +41,20 @@ HackerDefense.Preload.prototype = {
         this.load.image('enemy1', 'assets/images/enemy_1.png');
         this.load.image('fireGuy', 'assets/images/fireGuy.png');
         this.load.image('skullGuy', 'assets/images/skullGuy.png');
-        this.load.image('towerBox', 'assets/images/grid.png');
+        this.load.image('towerBox', 'assets/images/spaceBackground.png');
         this.load.image('bullet', 'assets/images/bullet.png');
         this.load.image('enemy2', 'assets/images/enemy_2.png');
-        this.load.image('button', 'assets/images/button.png');
+        this.load.image('enemy3', 'assets/images/enemy_3.png');
+        this.load.image('enemy4', 'assets/images/enemy_4.png');
+        this.load.image('finalBoss', 'assets/images/finalBoss.png');
+        this.load.image('button', 'assets/images/startButton.png');
         this.load.image('flame', 'assets/images/flame.png');
         this.load.image('skullBullet', 'assets/images/skullBullet.png');
+        this.load.image('laserGuy', 'assets/images/laserTurret.png');
+        this.load.image('greenLaser', 'assets/images/greenLaser.png');
         this.load.spritesheet('kaboom', 'assets/images/explosion.png', 64, 64, 23);
+        this.load.image('archerGuy', 'assets/images/archerTower.png');
+        this.load.image('arrow', 'assets/images/arrow.png');
         //this.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js');
 
         // this.load.audio('explosion', 'assets/audio/explosion.ogg');

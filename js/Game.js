@@ -1,4 +1,26 @@
-//edit this function to accept enemies array, and target nearest enemy
+// buildTower = function(game, name){
+//   this.name = name;
+//   this.game = game;
+//   var buildTower = this.game.buildGroup.create(640, 32, 'skullGuy');
+//   buildTower.inputEnabled = true;
+//   buildTower.input.enableDrag();
+//   buildTower.defaultx = 640;
+//   buildTower.defaulty = 32;
+//   buildTower.towerCost = 50;
+//   buildTower.bulletKey = 'skullBullet';
+//   buildTower.constructorType = skullTower;
+//   buildTower.alpha = 0.5
+//   this.game.buildTowerCostText = this.game.game.add.text(game.game.world.centerX, this.game.game.world.centerY - 288, "TowerCost: 50", {
+//       font: "20px Arial",
+//       fill: "#00000",
+//       align: "center"
+//   });
+//
+//   // fireGuy.events.onDragStart.add(onDragStart, this);
+//   buildTower.events.onDragStop.add(this.game.onDragStop, this.game);
+//
+// }
+
 newTower = function(index, game, enemies, bullets, sprite) {
 
     this.game = game;
@@ -8,9 +30,9 @@ newTower = function(index, game, enemies, bullets, sprite) {
     this.bullets = bullets;
     this.nextFire = 0;
     this.alive = true;
-
     this.tower = game.add.sprite(Math.round(sprite.position.x / 32) * 32, Math.round(sprite.position.y / 32) * 32, sprite.key);
-
+    this.tower.inputEnabled = true;
+    this.tower.alpha = 1;
     game.physics.enable(this.tower, Phaser.Physics.ARCADE);
     this.tower.name = index.toString();
 
@@ -46,9 +68,40 @@ skullTower = function(index, game, enemies, bullets, sprite) {
 skullTower.prototype = Object.create(newTower.prototype);
 skullTower.prototype.constructor = skullTower;
 
+laserTower = function(index, game, enemies, bullets, sprite) {
+    newTower.call(this, index, game, enemies, bullets, sprite);
+    this.type = "laser";
+    this.damageType = "light";
+    this.range = 100;
+    this.fireRate = 10;
+    this.damagePower = 1;
+    this.bulletSpeed = 3000;
+
+};
+
+laserTower.prototype = Object.create(newTower.prototype);
+laserTower.prototype.constructor = laserTower;
+
+arrowTower = function(index, game, enemies, bullets, sprite) {
+    newTower.call(this, index, game, enemies, bullets, sprite);
+    this.type = "arrow";
+    this.damageType = "physical";
+    this.range = 1000;
+    this.fireRate = 1000;
+    this.damagePower = 1;
+    this.bulletSpeed = 400;
+
+};
+
+arrowTower.prototype = Object.create(newTower.prototype);
+arrowTower.prototype.constructor = arrowTower;
+
+
 
 
 newTower.prototype.update = function() {
+
+
 
     //this sets the index to the farthest ahead enemy in range
     var enemyIndex = this.firstEnemyInRange();
@@ -69,15 +122,16 @@ newTower.prototype.update = function() {
 
             var bullet = this.bullets.getFirstDead();
             if (this.enemy.alive === true) {
-                bullet.reset(this.tower.x+8, this.tower.y+8);
-                // bullet.rotation =
-                this.game.physics.arcade.moveToObject(bullet, this.enemyBody, this.bulletSpeed);
+                bullet.reset(this.tower.x + 8, this.tower.y + 8);
+                bullet.rotation =  this.game.physics.arcade.moveToObject(bullet, this.enemyBody, this.bulletSpeed);
             }
             for (var i = 0; i < this.bullets.length; i++) {
                 if (this.bullets.children[i].alive === true && this.enemy.alive === true) {
-                    console.log("updating my bullets!")
-                    // this.bullets.children[i].rotation =
-                    this.game.physics.arcade.moveToObject(this.bullets.children[i], this.enemyBody, this.bulletSpeed);
+
+                      this.bullets.children[i].rotation = this.game.physics.arcade.moveToObject(this.bullets.children[i], this.enemyBody, this.bulletSpeed);
+                      if(this.type === "laser" ){
+                        bullet.reset(this.tower.x + 10, this.tower.y + 20);
+                      }
 
                 }
                 if (this.enemy.alive === false) {
@@ -150,10 +204,9 @@ function newEnemy(index, game) {
 
 newEnemy.prototype.update = function() {
 
-
     if (this.health <= 0 && this.alive === true) {
         this.enemy.kill();
-        var splosion = this.game.add.sprite(this.enemy.position.x-16, this.enemy.position.y-16, 'kaboom');
+        var splosion = this.game.add.sprite(this.enemy.position.x - 16, this.enemy.position.y - 16, 'kaboom');
         splosion.animations.add('BOOM');
         splosion.animations.play('BOOM', 30, false, true);
 
@@ -168,7 +221,6 @@ function newEnemy2(index, game) {
     this.game = game;
     this.health = 20;
     this.alive = true;
-
 
     //spawns enemy at spawn point
     this.enemy = game.add.sprite(0, 544, 'enemy2');
@@ -193,7 +245,110 @@ newEnemy2.prototype.update = function() {
         splosion.animations.add('BOOM');
         splosion.animations.play('BOOM', 30, false, true);
 
-        HackerDefense.game.levelCount = HackerDefense.game.levelCount + 1
+        this.game.state.states.Game.levelCount = this.game.state.states.Game.levelCount + 1
+
+        this.game.state.states.Game.resourceA = this.game.state.states.Game.resourceA + 10
+        this.alive = false;
+    }
+};
+
+function newEnemy3(index, game) {
+    this.game = game;
+    this.health = 20;
+    this.alive = true;
+
+    //spawns enemy at spawn point
+    this.enemy = game.add.sprite(0, 544, 'enemy3');
+
+    //sets how fast the enemies spawn!
+    this.spawnRate = 100;
+    this.enemy.name = index.toString();
+    game.physics.enable(this.enemy, Phaser.Physics.ARCADE);
+
+    //sets the initial path to zero
+    this.nextStep = 0;
+
+    //need to add the enemy to the enemies array or group?
+};
+
+newEnemy3.prototype.update = function() {
+
+
+    if (this.health <= 0 && this.alive === true) {
+        this.enemy.kill();
+        var splosion = this.game.add.sprite(this.enemy.position.x, this.enemy.position.y, 'kaboom');
+        splosion.animations.add('BOOM');
+        splosion.animations.play('BOOM', 30, false, true);
+
+        this.game.state.states.Game.levelCount = this.game.state.states.Game.levelCount + 1
+        this.game.state.states.Game.resourceA = this.game.state.states.Game.resourceA + 10
+        this.alive = false;
+    }
+};
+
+function newEnemy4(index, game) {
+    this.game = game;
+    this.health = 40;
+    this.alive = true;
+
+    //spawns enemy at spawn point
+    this.enemy = game.add.sprite(0, 544, 'enemy4');
+
+    //sets how fast the enemies spawn!
+    this.spawnRate = 100;
+    this.enemy.name = index.toString();
+    game.physics.enable(this.enemy, Phaser.Physics.ARCADE);
+
+    //sets the initial path to zero
+    this.nextStep = 0;
+
+    //need to add the enemy to the enemies array or group?
+};
+
+newEnemy4.prototype.update = function() {
+
+
+    if (this.health <= 0 && this.alive === true) {
+        this.enemy.kill();
+        var splosion = this.game.add.sprite(this.enemy.position.x, this.enemy.position.y, 'kaboom');
+        splosion.animations.add('BOOM');
+        splosion.animations.play('BOOM', 30, false, true);
+
+        this.game.state.states.Game.levelCount = this.game.state.states.Game.levelCount + 1
+        this.game.state.states.Game.resourceA = this.game.state.states.Game.resourceA + 10
+        this.alive = false;
+    }
+};
+
+function finalBoss(index, game) {
+    this.game = game;
+    this.health = 20000;
+    this.alive = true;
+
+    //spawns enemy at spawn point
+    this.enemy = game.add.sprite(0, 544, 'finalBoss');
+
+    //sets how fast the enemies spawn!
+    this.spawnRate = 100;
+    this.enemy.name = index.toString();
+    game.physics.enable(this.enemy, Phaser.Physics.ARCADE);
+
+    //sets the initial path to zero
+    this.nextStep = 0;
+
+    //need to add the enemy to the enemies array or group?
+};
+
+finalBoss.prototype.update = function() {
+
+
+    if (this.health <= 0 && this.alive === true) {
+        this.enemy.kill();
+        var splosion = this.game.add.sprite(this.enemy.position.x, this.enemy.position.y, 'kaboom');
+        splosion.animations.add('BOOM');
+        splosion.animations.play('BOOM', 30, false, true);
+
+        this.game.state.states.Game.levelCount = this.game.state.states.Game.levelCount + 1
         this.game.state.states.Game.resourceA = this.game.state.states.Game.resourceA + 10
         this.alive = false;
     }
@@ -215,6 +370,93 @@ var nextLevelButton;
 
 HackerDefense.Game.prototype = {
 
+  setTowers: function(){
+
+    // makes the fireGuy tower buildable
+    this.fireGuy = buildGroup.create(640, 32, 'fireGuy');
+    this.fireGuy.inputEnabled = true;
+    this.fireGuy.input.enableDrag();
+    this.fireGuy.defaultx = 640;
+    this.fireGuy.defaulty = 32;
+    this.fireGuy.towerCost = 50;
+    this.fireGuy.bulletKey = 'flame';
+    this.fireGuy.constructorType = dragonBulletTower;
+    this.fireGuy.alpha = 0.5
+    this.fireGuyInfoText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 288,
+      "Name: Dragon Tower \nCost: 50 \nDamage: 1 \nTower Range:200 \nSpeed:10 \nUpgrades: None", {
+        font: "20px Arial",
+        fill: "#ffffff",
+        align: "left"
+    });
+    this.fireGuyInfoText.alpha = 0;
+
+    // fireGuy.events.onDragStart.add(onDragStart, this);
+    this.fireGuy.events.onDragStop.add(this.onDragStop, this);
+
+
+    this.skullGuy = buildGroup.create(640, 64, 'skullGuy'); //creates the initial sprite
+    this.skullGuy.inputEnabled = true;
+    this.skullGuy.input.enableDrag();
+    this.skullGuy.defaultx = 640;
+    this.skullGuy.defaulty = 64;
+    this.skullGuy.towerCost = 50;
+    this.skullGuy.bulletKey = 'skullBullet';
+    this.skullGuy.constructorType = skullTower; //sprite.constructorType
+    this.skullGuy.alpha = 0.5
+    this.skullGuyInfoText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 256,
+      "Name: Skullzor \n Cost: 50 \nDamge:10 \nRange: 5000 \nSpeed:1 \nUpgrades: None", {
+        font: "20px Arial",
+        fill: "#ffffff",
+        align: "left"
+    });
+    this.skullGuyInfoText.alpha = 0;
+
+    // fireGuy.events.onDragStart.add(onDragStart, this);
+    this.skullGuy.events.onDragStop.add(this.onDragStop, this);
+
+    this.laserGuy = buildGroup.create(640, 96, 'laserGuy'); //creates the initial sprite
+    this.laserGuy.inputEnabled = true;
+    this.laserGuy.input.enableDrag();
+    this.laserGuy.defaultx = 640;
+    this.laserGuy.defaulty = 96;
+    this.laserGuy.towerCost = 100;
+    this.laserGuy.bulletKey = 'greenLaser';
+    this.laserGuy.constructorType = laserTower; //sprite.constructorType
+    this.laserGuy.alpha = 0.5
+    this.laserGuyInfoText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 224,
+      "Name: The Green Laser \n Cost: 200 \nDamge:1 \nRange: 50 \nSpeed:100 \nUpgrades: None", {
+        font: "20px Arial",
+        fill: "#ffffff",
+        align: "left"
+    });
+    this.laserGuyInfoText.alpha = 0;
+
+    // fireGuy.events.onDragStart.add(onDragStart, this);
+    this.laserGuy.events.onDragStop.add(this.onDragStop, this);
+
+
+    this.archerGuy = buildGroup.create(640, 128, 'archerGuy'); //creates the initial sprite
+    this.archerGuy.inputEnabled = true;
+    this.archerGuy.input.enableDrag();
+    this.archerGuy.defaultx = 640;
+    this.archerGuy.defaulty = 128;
+    this.archerGuy.towerCost = 100;
+    this.archerGuy.bulletKey = 'arrow';
+    this.archerGuy.constructorType = arrowTower; //sprite.constructorType
+    this.archerGuy.alpha = 0.5
+    this.archerGuyInfoText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 192,
+      "Name: The Archer! \n Cost: 100 \nDamge:1 \nRange: 1000 \nSpeed:10 \nUpgrades: None", {
+        font: "20px Arial",
+        fill: "#ffffff",
+        align: "left"
+    });
+    this.archerGuyInfoText.alpha = 0;
+
+    // fireGuy.events.onDragStart.add(onDragStart, this);
+    this.archerGuy.events.onDragStop.add(this.onDragStop, this);
+
+  },
+
     create: function() {
         this.map = this.game.add.tilemap('level2');
         this.level = 1;
@@ -222,32 +464,39 @@ HackerDefense.Game.prototype = {
         this.levelPass = false;
         this.enemiesAlive = 0;
         this.resourceA = 100;
-        this.lives = 50;
-        this.resourcesText = this.game.add.text(this.game.world.centerX - 40, this.game.world.centerY + 250, "Resources:", {
+        this.lives = 5;
+        this.resourcesText = this.game.add.text(this.game.world.centerX + 40, this.game.world.centerY + 250, "Resources:", {
             font: "40px Arial",
-            fill: "#00000",
+            fill: "#ffffff",
             align: "center"
+        });
+
+        this.towerInfoText = this.game.add.text(640, 0,
+          "Buildable Towers (Hover For Info)", {
+            font: "20px Arial",
+            fill: "#ffffff",
+            align: "left"
         });
 
         this.resourcesText.setText("Resources: " + this.resourceA);
 
-        this.livesText = this.game.add.text(this.game.world.centerX - 40, this.game.world.centerY + 200, "Lives:", {
+        this.livesText = this.game.add.text(this.game.world.centerX + 40, this.game.world.centerY + 200, "Lives:", {
             font: "40px Arial",
-            fill: "#00000",
+            fill: "#ffffff",
             align: "center"
         });
 
         this.livesText.setText("Lives: " + this.lives);
 
-        this.statusText = this.game.add.text(this.game.world.centerX + 100,
-            this.game.world.centerY + 120, "Click To Start Level 1", {
+        this.statusText = this.game.add.text(this.game.world.centerX + 40,
+            this.game.world.centerY + 150, "Click To Start Level 1", {
                 font: "40px Arial",
-                fill: "#00000",
+                fill: "#ffffff",
                 align: "center"
             });
 
         //add a button to play next level
-        nextLevelButton = this.game.add.button(this.game.world.centerX - 50, 400, 'button', this.actionOnClick, this);
+        nextLevelButton = this.game.add.button(this.game.world.centerX-40, 460, 'button', this.actionOnClick, this);
 
         //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
         this.map.addTilesetImage('scifi_platformTiles_32x32', 'gameTiles');
@@ -257,6 +506,8 @@ HackerDefense.Game.prototype = {
         //creates tile layers
         this.wallLayer = this.map.createLayer('wallLayer');
         this.pathLayer = this.map.createLayer('pathLayer');
+
+
 
         //collision on wallLayer
         this.map.setCollisionBetween(1, 100000, true, 'wallLayer');
@@ -271,43 +522,10 @@ HackerDefense.Game.prototype = {
         var grid = this.game.add.sprite(640, 0, 'towerBox');
         this.game.world.sendToBack(grid);
 
-        //puts the first available tower in the grid and makes it draggable
+        //puts the buildable towers in the grid
 
+        this.setTowers();
 
-        var fireGuy = buildGroup.create(640, 0, 'fireGuy');
-        fireGuy.inputEnabled = true;
-        fireGuy.input.enableDrag();
-        fireGuy.defaultx = 640;
-        fireGuy.defaulty = 0;
-        fireGuy.towerCost = 50;
-        fireGuy.bulletKey = 'flame';
-        fireGuy.constructorType = dragonBulletTower;
-        this.fireGuyCostText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 320, "TowerCost: 50", {
-            font: "20px Arial",
-            fill: "#00000",
-            align: "center"
-        });
-
-        // fireGuy.events.onDragStart.add(onDragStart, this);
-        fireGuy.events.onDragStop.add(this.onDragStop, this);
-
-
-        var skullGuy = buildGroup.create(640, 32, 'skullGuy');
-        skullGuy.inputEnabled = true;
-        skullGuy.input.enableDrag();
-        skullGuy.defaultx = 640;
-        skullGuy.defaulty = 32;
-        skullGuy.towerCost = 50;
-        skullGuy.bulletKey = 'skullBullet';
-        skullGuy.constructorType = skullTower;
-        this.skullGuyCostText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 288, "TowerCost: 50", {
-            font: "20px Arial",
-            fill: "#00000",
-            align: "center"
-        });
-
-        // fireGuy.events.onDragStart.add(onDragStart, this);
-        skullGuy.events.onDragStop.add(this.onDragStop, this);
 
 
         //resizes the game world to match the layer dimensions
@@ -354,7 +572,7 @@ HackerDefense.Game.prototype = {
         towerBullets = HackerDefense.game.add.group();
         towerBullets.enableBody = true;
         towerBullets.physicsBodyType = Phaser.Physics.ARCADE;
-        towerBullets.createMultiple(10, sprite.bulletKey);
+        towerBullets.createMultiple(5, sprite.bulletKey);
 
         //this pushes a new tower to the towers Array, should possibly make a towers group?
         //edit this to push the enemies group, so tower can attack nearest enemy
@@ -392,18 +610,13 @@ HackerDefense.Game.prototype = {
 
                 var distance = Phaser.Point.distance(enemy.enemy.position, next_position);
 
-                if (distance > 5 && enemy.nextStep < enemyPath.length-1) {
+                if (distance > 5 && enemy.nextStep < enemyPath.length - 1) {
                     velocity = new Phaser.Point(next_position.x - enemy.enemy.position.x,
                         next_position.y - enemy.enemy.position.y);
                     velocity.normalize();
                     enemy.enemy.body.velocity.x = velocity.x * 200;
                     enemy.enemy.body.velocity.y = velocity.y * 200;
-                }
-
-
-
-
-                else {
+                } else {
                     if (enemy.nextStep < enemyPath.length) {
                         enemy.nextStep += 1;
 
@@ -412,16 +625,16 @@ HackerDefense.Game.prototype = {
 
             }
 
-            if(enemy.nextStep >= enemyPath.length && enemy.alive === true){
-             // enemy.enemy.kill();
-             enemy.alive = false;
-             console.log("enemy killed")
+            if (enemy.nextStep >= enemyPath.length && enemy.alive === true) {
+                // enemy.enemy.kill();
+                enemy.alive = false;
+                console.log("enemy killed")
 
-            HackerDefense.game.state.states.Game.levelCount = HackerDefense.game.state.states.Game.levelCount + 1
-            HackerDefense.game.state.states.Game.lives = HackerDefense.game.state.states.Game.lives -1
-            HackerDefense.game.state.states.Game.livesText.setText("Lives: " + HackerDefense.game.state.states.Game.lives);
+                HackerDefense.game.state.states.Game.levelCount = HackerDefense.game.state.states.Game.levelCount + 1
+                HackerDefense.game.state.states.Game.lives = HackerDefense.game.state.states.Game.lives - 1
+                HackerDefense.game.state.states.Game.livesText.setText("Lives: " + HackerDefense.game.state.states.Game.lives);
 
-           }
+            }
 
         })
 
@@ -439,6 +652,7 @@ HackerDefense.Game.prototype = {
         if (this.game.time.now > this.nextSpawn && enemies.length < 30) {
 
             this.statusText.setText("Enemies To Be Spawned: " + (29 - enemies.length));
+            console.log(enemies.length)
 
             this.nextSpawn = this.game.time.now + this.spawnRate;
 
@@ -458,7 +672,7 @@ HackerDefense.Game.prototype = {
     },
 
     createEnemies2: function() {
-        this.spawnRate = 1000;
+        this.spawnRate = 900;
 
         //create enemies
         enemies.enableBody = true;
@@ -468,22 +682,74 @@ HackerDefense.Game.prototype = {
         //creating a new enemy using enemy constructor!
         if (this.game.time.now > this.nextSpawn && enemies.length < 30) {
 
-            this.statusText.setText("Enemies To Be Spawned: " + (30 - enemies.length));
+            this.statusText.setText("Enemies To Be Spawned: " + (29 - enemies.length));
+            //console.log(enemies.length)
 
             this.nextSpawn = this.game.time.now + this.spawnRate;
 
             enemies.push(new newEnemy2(enemies.length, HackerDefense.game));
         }
 
-        //old way pulling from map
-        // enemies.push(new newEnemy(enemies.length - 1, HackerDefense.game, enemies.children[0], towerBullets, sprite));
+    },
 
-        // var enemy;
-        // result = this.findObjectsByType('enemy1', this.map, 'enemyLayer');
-        // result.forEach(function(element) {
 
-        //     this.createFromTiledObject(element, enemies);
-        // }, this);
+    createEnemies3: function() {
+        this.spawnRate = 500;
+
+        //create enemies
+        enemies.enableBody = true;
+        enemies.physicsBodyType = Phaser.Physics.ARCADE;
+
+
+        //creating a new enemy using enemy constructor!
+        if (this.game.time.now > this.nextSpawn && enemies.length < 30) {
+
+            this.statusText.setText("Enemies To Be Spawned: " + (29 - enemies.length));
+
+            this.nextSpawn = this.game.time.now + this.spawnRate;
+
+            enemies.push(new newEnemy3(enemies.length, HackerDefense.game));
+        }
+
+    },
+
+    createEnemies4: function() {
+        this.spawnRate = 500;
+
+        //create enemies
+        enemies.enableBody = true;
+        enemies.physicsBodyType = Phaser.Physics.ARCADE;
+
+
+        //creating a new enemy using enemy constructor!
+        if (this.game.time.now > this.nextSpawn && enemies.length < 30) {
+
+            this.statusText.setText("Enemies To Be Spawned: " + (29 - enemies.length));
+
+            this.nextSpawn = this.game.time.now + this.spawnRate;
+
+            enemies.push(new newEnemy4(enemies.length, HackerDefense.game));
+        }
+
+    },
+
+    createBoss: function() {
+
+        //create enemies
+        enemies.enableBody = true;
+        enemies.physicsBodyType = Phaser.Physics.ARCADE;
+
+
+        //creating a new enemy using enemy constructor!
+        if (this.game.time.now > this.nextSpawn && enemies.length < 1) {
+
+            this.statusText.setText("Enemies To Be Spawned: " + (29 - enemies.length));
+
+            this.nextSpawn = this.game.time.now + this.spawnRate;
+
+            enemies.push(new finalBoss(enemies.length, HackerDefense.game));
+        }
+
     },
     //find objects in a Tiled layer that containt a property called "type" equal to a certain value
     findObjectsByType: function(type, map, layer) {
@@ -517,13 +783,54 @@ HackerDefense.Game.prototype = {
         // for(var i = 0)
     },
 
-    update: function() {
+    towerDisplayUpdate: function() {
+
+      //make an array of buildable tower objects, then loop over them, instead of doing it this way.
+        if (this.skullGuy.input.pointerOver()) {
+            this.skullGuy.alpha = 1;
+            this.skullGuyInfoText.alpha=1;
+        } else {
+            this.skullGuy.alpha = 0.5;
+            this.skullGuyInfoText.alpha=0;
+        }
+
+        if (this.fireGuy.input.pointerOver()) {
+            this.fireGuy.alpha = 1;
+            this.fireGuyInfoText.alpha=1;
+        } else {
+            this.fireGuy.alpha = 0.5;
+            this.fireGuyInfoText.alpha=0;
+        }
+
+        if (this.laserGuy.input.pointerOver()) {
+            this.laserGuy.alpha = 1;
+            this.laserGuyInfoText.alpha=1;
+        } else {
+            this.laserGuy.alpha = 0.5;
+            this.laserGuyInfoText.alpha=0;
+        }
+
+        if (this.archerGuy.input.pointerOver()) {
+            this.archerGuy.alpha = 1;
+            this.archerGuyInfoText.alpha=1;
+        } else {
+            this.archerGuy.alpha = 0.5;
+            this.archerGuyInfoText.alpha=0;
+        }
+
+    },
+
+        update: function() {
+
+        this.towerDisplayUpdate();
+
+
 
         this.resourcesText.setText("Resources: " + this.resourceA);
         this.enemyMove(enemyPath);
-        if(towers[0] != undefined){
-        towers[0].update();
-      }
+        if (towers[0] != undefined) {
+            towers[0].update();
+        }
 
 
         if (this.level === 1 && this.levelPass === true) {
@@ -531,6 +838,17 @@ HackerDefense.Game.prototype = {
         }
         if (this.level === 2 && this.levelPass === true) {
             this.createEnemies2();
+        }
+        if (this.level === 3 && this.levelPass === true) {
+            this.createEnemies3();
+        }
+
+        if (this.level === 4 && this.levelPass === true) {
+            this.createEnemies4();
+        }
+
+        if (this.level === 5 && this.levelPass === true) {
+            this.createBoss();
         }
         for (var i = 0; i < towers.length; i++) {
             towers[i].update();
@@ -540,13 +858,22 @@ HackerDefense.Game.prototype = {
             enemies[i].update();
         }
         if (this.levelCount >= 30) {
-            console.log("LEVEL UP!!!")
-            this.levelPass = false;
 
+            this.levelPass = false;
             this.levelCount = 0;
             this.level = this.level + 1
             this.statusText.setText("Click to begin Level " + this.level);
             enemies = [];
+        }
+
+        if (this.lives <= 0) {
+            this.gameText = this.game.add.text(this.game.world.centerX - 375, this.game.world.centerY - 75,
+                "GAME OVER \n Click to Restart", {
+                    font: "60px Arial",
+                    fill: "#a70808",
+                    align: "center"
+                });
+
         }
 
     },
